@@ -517,7 +517,10 @@ function LoginModal(props: { onClose: () => void; onTelegram: (user: TelegramUse
       <div style={modalStyles.modal} role="dialog" aria-modal="true" aria-labelledby="login-title" onClick={(e) => e.stopPropagation()}>
         <h2 id="login-title" style={modalStyles.title}>Доступ до редагування</h2>
         {mode === 'widget' && (
-          <p style={modalStyles.text}>Увійди через Telegram. Редагувати нб можуть лише дозволені акаунти.</p>
+          <p style={modalStyles.text}>
+            debug: mode={mode}, tg={String(!!(window as unknown as { Telegram?: unknown }).Telegram)}, initData=
+            {String(((window as unknown as { Telegram?: { WebApp?: { initData?: string } } }).Telegram?.WebApp?.initData ?? '').length)}
+          </p>
         )}
         {mode !== 'widget' && !error && <p style={modalStyles.text}>Перевіряємо акаунт…</p>}
         {mode === 'widget' &&
@@ -531,7 +534,7 @@ function LoginModal(props: { onClose: () => void; onTelegram: (user: TelegramUse
       </div>
     </div>
   );
-  
+
 }
 const modalStyles: Record<string, CSSProperties> = {
   overlay: { position: 'fixed', inset: 0, background: 'rgba(86, 103, 119, 0.55)', display: 'grid', placeItems: 'center', padding: 16, zIndex: 10 },
