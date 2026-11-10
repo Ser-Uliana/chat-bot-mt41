@@ -33,7 +33,7 @@ const STORAGE_KEY = 'mt41-attendance-v2';
 const SESSION_KEY = 'mt41-editor-session';
 const SESSION_TTL_MS = 60 * 60 * 1000; // доступ до редагування на 1 годину
 const PAIRS_BY_WEEKDAY = [4, 4, 4, 4, 3]; // Пн–Пт
-const TELEGRAM_BOT = process.env.TELEGRAM_BOT ?? '';
+const TELEGRAM_BOT = process.env.NEXT_PUBLIC_TELEGRAM_BOT ?? '';
 
 const STAFF: [string, string][] = [
   ['Староста', 'Серібна Уляна Тарасівна'],
