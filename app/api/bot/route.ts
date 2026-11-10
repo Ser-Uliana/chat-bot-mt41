@@ -23,21 +23,35 @@ export async function POST(req: Request) {
 
   const update = (await req.json().catch(() => null)) as Update | null;
   const msg = update?.message;
+    // "/schedule@MyBot arg" -> "schedule"
+  const cmd = msg?.text?.match(/^\/(\w+)/)?.[1]?.toLowerCase();
 
-  if (msg?.text?.startsWith('/start')) {
+  if (msg && cmd) {
     // web_app-кнопки працюють лише в особистому чаті; у групі — звичайні посилання
     const open = msg.chat.type === 'private';
     const btn = (text: string, path: string) =>
       open ? { text, web_app: { url: `${WEBAPP_URL}${path}` } } : { text, url: `${WEBAPP_URL}${path}` };
 
-    await tg('sendMessage', {
-      chat_id: msg.chat.id,
-      text: 'Оберіть розділ:',
-      reply_markup: {
-        inline_keyboard: [[btn('📅 Розклад пар', '/schedule'), btn('🗓️ Відсутність', '/absentStudents')]],
-      },
-    });
+    const schedule = btn('📅 Розклад пар', '/schedule');
+    const absent = btn('🗓️ Відсутність', '/absentStudents');
+
+    const reply: Record<string, { text: string; row: unknown[] }> = {
+      start: { text: 'Оберіть розділ:', row: [schedule, absent] },
+      schedule: { text: 'Розклад пар:', row: [schedule] },
+      absent: { text: 'Відсутність студентів:', row: [absent] },
+    };
+
+    const r = reply[cmd];
+    if (r) {
+      await tg('sendMessage', {
+        chat_id: msg.chat.id,
+        text: r.text,
+        reply_markup: { inline_keyboard: [r.row] },
+      });
+    }
   }
 
   return NextResponse.json({ ok: true }); // завжди 200, щоб Telegram не повторював запити
 }
+
+

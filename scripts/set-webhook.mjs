@@ -15,16 +15,22 @@ const call = async (method, body) => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  console.log(method, '→', JSON.stringify(await res.json()));
+  const json = await res.json();
+  console.log(method, '→', JSON.stringify(json));
+  if (!json.ok) process.exitCode = 1;
 };
 
-await call('setWebhook', {
-  url: `${WEBAPP_URL}/api/bot`,
-  secret_token: WEBHOOK_SECRET,
-  allowed_updates: ['message'],
-  drop_pending_updates: true,
-});
-await call('setMyCommands', { commands: [{ command: 'start', description: 'Відкрити меню групи' }] });
-await call('setChatMenuButton', {
-  menu_button: { type: 'web_app', text: 'Відкрити', web_app: { url: WEBAPP_URL } },
-});
+const commands = [
+  { command: 'start', description: 'Відкрити меню' },
+  { command: 'schedule', description: 'Розклад пар' },
+  { command: 'absent', description: 'Відсутність студентів' },
+];
+for (const scope of [
+  { type: 'default' },
+  { type: 'all_private_chats' },
+  { type: 'all_group_chats' },
+  { type: 'all_chat_administrators' },
+]) {
+  await call('deleteMyCommands', { scope });
+  await call('setMyCommands', { commands, scope });
+}
