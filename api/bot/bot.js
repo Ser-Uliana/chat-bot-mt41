@@ -1,4 +1,4 @@
-const TelegramBot = require('node-telegram-bot-api');
+const TelegramBot = require(env.BOT_API);
 
 // Замініть своїм токеном від @BotFather
 const token = env.BOT_TOKEN;
