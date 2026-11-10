@@ -460,10 +460,28 @@ function TelegramLoginButton({ onAuth }: { onAuth: (user: TelegramUser) => void 
   return <div ref={ref} />;
 }
 
+/* Усередині Telegram Mini App повертає initData (підписані дані користувача), поза ним — '' */
+function loadTelegramInitData(): Promise<string> {
+  type W = { Telegram?: { WebApp?: { initData?: string } } };
+  const get = () => (window as unknown as W).Telegram?.WebApp;
+  return new Promise((resolve) => {
+    if (get()) return resolve(get()?.initData ?? '');
+    const s = document.createElement('script');
+    s.src = 'https://telegram.org/js/telegram-web-app.js';
+    s.async = true;
+    s.onload = () => resolve(get()?.initData ?? '');
+    s.onerror = () => resolve('');
+    document.head.appendChild(s);
+    setTimeout(() => resolve(get()?.initData ?? ''), 4000);
+  });
+}
+
 /* ---- Вікно входу (лише Telegram) ---- */
 function LoginModal(props: { onClose: () => void; onTelegram: (user: TelegramUser) => Promise<boolean> }) {
   const { onClose, onTelegram } = props;
   const [error, setError] = useState('');
+  const [mode, setMode] = useState<'checking' | 'telegram' | 'widget'>('checking');
+  const started = useRef(false);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
@@ -480,21 +498,40 @@ function LoginModal(props: { onClose: () => void; onTelegram: (user: TelegramUse
     [onTelegram, onClose],
   );
 
+  // Усередині Telegram входимо автоматично через initData, поза ним показуємо віджет
+  useEffect(() => {
+    if (started.current) return;
+    started.current = true;
+    loadTelegramInitData().then((initData) => {
+      if (!initData) {
+        setMode('widget');
+        return;
+      }
+      setMode('telegram');
+      void handleTelegram({ initData } as unknown as TelegramUser);
+    });
+  }, [handleTelegram]);
+
   return (
     <div style={modalStyles.overlay} onClick={onClose} role="presentation">
       <div style={modalStyles.modal} role="dialog" aria-modal="true" aria-labelledby="login-title" onClick={(e) => e.stopPropagation()}>
         <h2 id="login-title" style={modalStyles.title}>Доступ до редагування</h2>
-        <p style={modalStyles.text}>Увійди через Telegram. Редагувати нб можуть лише дозволені акаунти.</p>
-        {TELEGRAM_BOT ? (
-          <TelegramLoginButton onAuth={handleTelegram} />
-        ) : (
-          <p role="alert" style={modalStyles.error}>Вхід недоступний: не задано TELEGRAM_BOT.</p>
+        {mode === 'widget' && (
+          <p style={modalStyles.text}>Увійди через Telegram. Редагувати нб можуть лише дозволені акаунти.</p>
         )}
+        {mode !== 'widget' && !error && <p style={modalStyles.text}>Перевіряємо акаунт…</p>}
+        {mode === 'widget' &&
+          (TELEGRAM_BOT ? (
+            <TelegramLoginButton onAuth={handleTelegram} />
+          ) : (
+            <p role="alert" style={modalStyles.error}>Вхід недоступний: не задано TELEGRAM_BOT.</p>
+          ))}
         {error && <p role="alert" style={modalStyles.error}>{error}</p>}
         <button type="button" style={modalStyles.cancel} onClick={onClose}>Скасувати</button>
       </div>
     </div>
   );
+  
 }
 const modalStyles: Record<string, CSSProperties> = {
   overlay: { position: 'fixed', inset: 0, background: 'rgba(86, 103, 119, 0.55)', display: 'grid', placeItems: 'center', padding: 16, zIndex: 10 },
