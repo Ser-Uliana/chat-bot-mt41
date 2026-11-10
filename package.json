@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "set-webhook": "node --env-file=.env scripts/set-webhook.mjs"
   },
   "dependencies": {
     "next": "16.4.6",
