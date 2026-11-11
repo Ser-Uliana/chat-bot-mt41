@@ -23,7 +23,7 @@ export async function POST(req: Request) {
 
   const update = (await req.json().catch(() => null)) as Update | null;
   const msg = update?.message;
-  // "/schedule@MyBot arg" -> "schedule"
+    // "/schedule@MyBot arg" -> "schedule"
   const cmd = msg?.text?.match(/^\/(\w+)/)?.[1]?.toLowerCase();
 
   if (msg && cmd) {
@@ -53,3 +53,5 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ ok: true }); // завжди 200, щоб Telegram не повторював запити
 }
+
+

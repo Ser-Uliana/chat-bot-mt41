@@ -33,4 +33,10 @@ for (const scope of [
 ]) {
   await call('deleteMyCommands', { scope });
   await call('setMyCommands', { commands, scope });
+  await call('setWebhook', {
+  url: `${WEBAPP_URL}/api/bot`,
+  secret_token: WEBHOOK_SECRET,
+  allowed_updates: ['message'],
+  drop_pending_updates: true,
+});
 }
